@@ -139,6 +139,7 @@ bool Level::update(sf::Vector2f t_playerPosition)
 		return true;
 	}
 
+	//update enemies
 	for (Enemy& enemy : m_enemies)
 	{
 		if (enemy.getPosition() == t_playerPosition)
