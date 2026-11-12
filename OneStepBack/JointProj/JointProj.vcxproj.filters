@@ -82,11 +82,8 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\LevelData\level1.yaml">
+    <Text Include="Resources\LevelData\level1.txt">
       <Filter>Resource Files\LevelData</Filter>
-    </None>
-    <None Include="Resources\LevelData\level2.yaml">
-      <Filter>Resource Files\LevelData</Filter>
-    </None>
+    </Text>
   </ItemGroup>
 </Project>

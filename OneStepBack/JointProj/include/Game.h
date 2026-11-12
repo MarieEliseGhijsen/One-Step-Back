@@ -5,8 +5,6 @@
 #pragma warning( disable : 4275 )
 
 #include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
-
 #include <iostream>
 
 #include "Window.h"
@@ -29,8 +27,8 @@ public:
 private:
 	void update(sf::Time t_deltaTime);
 
-	void processEvents();
-	void processKeys(const std::optional<sf::Event> t_event);
+	bool processEvents();
+	bool processKeys(const std::optional<sf::Event> t_event);
 	void processMouseClick(const std::optional<sf::Event> t_event);
 
 	sf::Font m_jerseyFont;
@@ -39,8 +37,9 @@ private:
 	Level m_level;
 	States m_gameState{ States::GAME_RUNNING };
 
+	//Player m_player;
 	Player m_player;
-	
+
 	bool m_DELETEexitGame; //control exiting game
 };
 

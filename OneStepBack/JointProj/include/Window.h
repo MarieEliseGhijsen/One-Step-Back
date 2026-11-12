@@ -30,10 +30,8 @@ public:
 	bool isOpen() const;
 	void close();
 
-	sf::RenderWindow &getWindow();
-										
+	sf::RenderWindow& getWindow();
+
 private:
 	sf::RenderWindow m_window;
-
-	sf::Font m_font;
 };

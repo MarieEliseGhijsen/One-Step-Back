@@ -1,8 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "yaml-cpp/yaml.h"
-#include <exception>
 
 #include <iostream>
 
@@ -15,7 +13,7 @@
 
 #include "Enemy.h"
 
-const static int MAX_NEIGHBOORS = 8;
+const static int MAX_NEIGHBOORS = 4;
 
 struct tileData
 {
@@ -40,7 +38,7 @@ public:
     void loadLevel(int t_levelNr);
     void loadTileNeighboors(int t_index, int t_row, int t_col);
 
-    void update();
+    void update(sf::Vector2f t_playerPosition);
 
     std::vector<int> breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f t_endPos);
     int asCell(sf::Vector2f t_pos);
@@ -52,13 +50,15 @@ public:
     int getWidth() const;
     int getHeight() const;
 
+    sf::Vector2f getStartPosition() const;
+
     const std::vector<Enemy>& getEnemies() const;
 
 private:
     LevelData m_level;
 
-    sf::Vector2f m_startPosition;
-    sf::Vector2f m_endPosition;
+    sf::Vector2f m_startPosition = sf::Vector2f(-1, -1);
+    sf::Vector2f m_endPosition = sf::Vector2f(-1, -1);
 
     std::vector<Enemy> m_enemies;
 };

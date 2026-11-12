@@ -3,12 +3,6 @@
 Window::Window() : m_window(sf::VideoMode({ Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT }), Globals::WINDOW_TITLE)
 {
 	m_window.setVerticalSyncEnabled(true);
-
-	//font
-	if (!m_font.openFromFile("Resources\\ASSETS\\FONTS\\Jersey20-Regular.ttf"))
-	{
-		std::cout << "problem loading arial black font in window.cpp" << std::endl;
-	}
 }
 
 std::optional<sf::Event> Window::pollEvent()
@@ -72,7 +66,7 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 			}
 
 			tile.setPosition({ row * tileWidth, col * tileHeight });
-			
+
 			m_window.draw(tile);
 		}
 	}
@@ -111,7 +105,7 @@ void Window::close()
 	m_window.close();
 }
 
-sf::RenderWindow &Window::getWindow()
+sf::RenderWindow& Window::getWindow()
 {
 	return m_window;
 }

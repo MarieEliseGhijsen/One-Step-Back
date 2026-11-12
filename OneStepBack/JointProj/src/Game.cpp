@@ -3,7 +3,8 @@
 
 Game::Game() : m_window{}, m_DELETEexitGame{ false } //when true game will exit
 {
-	m_level.loadLevel(2);
+	m_level.loadLevel(1);
+	m_player.setPosition(m_level.getStartPosition());
 }
 
 Game::~Game()
@@ -11,7 +12,7 @@ Game::~Game()
 }
 
 void Game::run()
-{	
+{
 	sf::Clock clock;
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
 
@@ -31,30 +32,49 @@ void Game::run()
 	}
 }
 
-void Game::processEvents()
+bool Game::processEvents()
 {
 	while (const std::optional newEvent = m_window.pollEvent())
 	{
-		if ( newEvent->is<sf::Event::Closed>()) 
+		if (newEvent->is<sf::Event::Closed>())
 		{
 			m_DELETEexitGame = true;
 		}
 		else if (newEvent->is<sf::Event::KeyPressed>())
 		{
-			processKeys(newEvent);
-		}
-		else if (newEvent->is<sf::Event::MouseButtonPressed>())
-		{
-			processMouseClick(newEvent);
+			if(processKeys(newEvent)) return true;
 		}
 	}
+
+	return false;
 }
 
-void Game::processKeys(const std::optional<sf::Event> t_event)
+bool Game::processKeys(const std::optional<sf::Event> t_event)
 {
-	const sf::Event::KeyPressed *newKeypress = t_event->getIf<sf::Event::KeyPressed>();
+	const sf::Event::KeyPressed* keypress = t_event->getIf<sf::Event::KeyPressed>();
 
-	//deal with key presses
+	if (keypress->code == sf::Keyboard::Key::Up)
+	{
+		m_player.update(Globals::UP);
+		return true;
+	}
+	else if (keypress->code == sf::Keyboard::Key::Down)
+	{
+		m_player.update(Globals::DOWN);
+		return true;
+	}
+	else if (keypress->code == sf::Keyboard::Key::Left)
+	{
+		m_player.update(Globals::LEFT);
+		return true;
+	}
+	else if (keypress->code == sf::Keyboard::Key::Right)
+	{
+		m_player.update(Globals::RIGHT);
+		return true;
+	}
+
+	return false;
 }
 
 void Game::processMouseClick(const std::optional<sf::Event> t_event)
@@ -66,13 +86,18 @@ void Game::processMouseClick(const std::optional<sf::Event> t_event)
 
 void Game::update(sf::Time t_deltaTime)
 {
+
 	if (m_DELETEexitGame)
 	{
 		m_window.close();
 	}
 
-	m_player.handleInput(t_deltaTime.asMilliseconds(), m_level);
-	m_level.update();
+	while (true)
+	{
+		if (processEvents()) break;
+	}
+
+	m_level.update(m_player.getPosition());
 
 	m_window.renderGameRunning(m_player, m_level);
 }

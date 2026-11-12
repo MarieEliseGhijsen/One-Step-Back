@@ -54,8 +54,7 @@
     <Image Include="Resources\ASSETS\IMAGES\SFML-LOGO.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\LevelData\level1.yaml" />
-    <None Include="Resources\LevelData\level2.yaml" />
+    <Text Include="Resources\LevelData\level1.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

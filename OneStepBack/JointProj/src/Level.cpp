@@ -1,51 +1,58 @@
 #include "../include/Level.h"
 #include "../include/Player.h"
 
-void operator >> (const YAML::Node& t_tileNode, tileData& t_tile)
-{
-	t_tile.m_type = t_tileNode["type"].as<int>();
-}
+#include <fstream>
+#include <stdexcept>
 
-void operator >> (const YAML::Node& t_levelNode, LevelData& t_level)
-{
-	t_level.m_width = t_levelNode["width"].as<int>();
-	t_level.m_height = t_levelNode["height"].as<int>();
-
-	t_level.m_tiles.clear();
-
-	const YAML::Node& mapNode = t_levelNode["map"];
-	for (int y = 0; y < t_level.m_height; ++y)
-	{
-		for (int x = 0; x < t_level.m_width; ++x)
-		{
-			tileData tile;
-			tile.m_type = mapNode[y][x].as<int>();
-			t_level.m_tiles.push_back(tile);
-		}
-	}
-
-	if (mapNode.size() != t_level.m_height)
-	{
-		throw std::runtime_error("Incorrect number of rows in map");
-	}
-
-	if (mapNode[0].size() != t_level.m_width)
-	{
-		throw std::runtime_error("Incorrect row width in map");
-	}
-}
+#include <filesystem>
+#include <iostream>
 
 void Level::loadLevel(int t_levelNr)
 {
-	std::string filename = "./resources/levelData/level" + std::to_string(t_levelNr) + ".yaml";
-	YAML::Node baseNode = YAML::LoadFile(filename);
-	baseNode >> m_level;
+	std::string filename = "Resources/levelData/level" + std::to_string(t_levelNr) + ".txt";
+	std::ifstream file(filename);
 
-	const YAML::Node& mapNode = baseNode["map"];
+	if (!file.is_open())
+	{
+		std::cout << "Current working directory : " << std::filesystem::current_path() << "\n";
+		std::cout << "Attempting to load : " << std::filesystem::absolute(filename) << "\n";
+		throw std::runtime_error("Could not open : " + filename);
+	}
 
-	//find start and end tiles
-	m_startPosition = sf::Vector2f(-1, -1);
-	m_endPosition = sf::Vector2f(-1, -1);
+	LevelData newLevel;
+
+	if (!(file >> newLevel.m_width >> newLevel.m_height))
+	{
+		throw std::runtime_error("Could not read level dimensions of : " + filename);
+	}
+
+	if (newLevel.m_width <= 0 || newLevel.m_height <= 0)
+	{
+		throw std::runtime_error("Invalid level dimensions in : " + filename);
+	}
+
+	if (newLevel.m_width > 1000 || newLevel.m_height > 1000)
+	{
+		throw std::runtime_error("Level dimensions are too large in : " + filename);
+	}
+
+	int tileType;
+
+	for (int i = 0; i < newLevel.m_width * newLevel.m_height; i++)
+	{
+		if (!(file >> tileType))
+		{
+			throw std::runtime_error("Incorrect amount of tile data in : " + filename);
+		}
+
+		tileData tile;
+		tile.m_type = tileType;
+		newLevel.m_tiles.push_back(tile);
+	}
+
+	file.close();
+
+	m_level = std::move(newLevel);
 
 	for (int y = 0; y < m_level.m_height; y++)
 	{
@@ -56,23 +63,18 @@ void Level::loadLevel(int t_levelNr)
 
 			if (tileType == 8)
 			{
-				m_startPosition = sf::Vector2f(
-					static_cast<float>(x),
-					static_cast<float>(y));
+				m_startPosition = sf::Vector2f(static_cast<float>(x), static_cast<float>(y));
 			}
 			else if (tileType == 9)
 			{
-				m_endPosition = sf::Vector2f(
-					static_cast<float>(x),
-					static_cast<float>(y));
+				m_endPosition = sf::Vector2f(static_cast<float>(x), static_cast<float>(y));
 			}
 		}
 	}
 
 	if (m_startPosition.x < 0 || m_endPosition.x < 0)
 	{
-		throw std::runtime_error(
-			"Level is missing a start point or end point");
+		throw std::runtime_error("Level is missing a start point or end point in : " + filename);
 	}
 
 	//load tile neighboors
@@ -82,17 +84,23 @@ void Level::loadLevel(int t_levelNr)
 		loadTileNeighboors(i, i / m_level.m_width, i % m_level.m_width);
 	}
 
-	//////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//testing
 	m_enemies.clear();
-	m_enemies.emplace_back(m_startPosition);
-	//////////////////////////////////////////////////////
+	m_enemies.emplace_back(m_endPosition);
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	std::cout << "Enemy tile: " << getTileType(m_startPosition.x, m_startPosition.y) << "\n";
+	std::cout << "Player tile: " << getTileType(m_endPosition.x, m_endPosition.y) << "\n";
 }
 
 void Level::loadTileNeighboors(int t_index, int t_row, int t_col)
 {
-	int rowOffset[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
-	int colOffset[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
+	//int rowOffset[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
+	//int colOffset[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
+
+	int rowOffset[] = { -1, 0, 1, 0 };
+	int colOffset[] = { 0, 1, 0, -1 };
 
 	int newRow = 0;
 	int newCol = 0;
@@ -113,14 +121,13 @@ void Level::loadTileNeighboors(int t_index, int t_row, int t_col)
 	}
 }
 
-void Level::update()
+void Level::update(sf::Vector2f t_playerPosition)
 {
-	std::vector<int> enemyPath = breadthFirstSearch(m_startPosition, m_endPosition);
-	
 	for (Enemy& enemy : m_enemies)
 	{
+		std::vector<int> enemyPath = breadthFirstSearch(enemy.getPosition(), t_playerPosition);
 		enemy.update(enemyPath, m_level.m_width);
-		std::cout << "updating enemy" << "\n";
+		//std::cout << "updating enemy" << "\n";
 	}
 }
 
@@ -205,6 +212,8 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 
 	std::reverse(path.begin(), path.end());
 
+	std::cout << "Path size: " << path.size() << "\n";
+
 	return path;
 }
 
@@ -232,13 +241,18 @@ int Level::getTileType(int t_x, int t_y) const
 }
 
 int Level::getWidth() const
-{ 
-	return m_level.m_width; 
+{
+	return m_level.m_width;
 }
 
 int Level::getHeight() const
-{ 
-	return m_level.m_height; 
+{
+	return m_level.m_height;
+}
+
+sf::Vector2f Level::getStartPosition() const
+{
+	return m_startPosition;
 }
 
 const std::vector<Enemy>& Level::getEnemies() const
