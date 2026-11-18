@@ -133,25 +133,34 @@ void Level::loadTileNeighboors(int t_index, int t_row, int t_col)
 
 bool Level::update(sf::Vector2f t_playerPosition)
 {
-	if (t_playerPosition == m_endPosition)
-	{
-		std::cout << "Player reached end point - level update returning true" << "\n";
-		return true;
-	}
+	std::vector<std::vector<int>> enemyPaths;
+    enemyPaths.reserve(m_enemies.size());
 
-	//update enemies
-	for (Enemy& enemy : m_enemies)
-	{
-		if (enemy.getPosition() == t_playerPosition)
-		{
-			std::cout << "Enemy has caught player - level update returning true" << "\n";
+	for (const Enemy& enemy : m_enemies)
+    {
+        std::vector<int> path = breadthFirstSearch(enemy.getPosition(), t_playerPosition);
+        enemyPaths.push_back(path);
+    }
+
+	for (int i = 0; i < m_enemies.size(); i++)
+    {
+        m_enemies[i].update(enemyPaths[i], m_level.m_width);
+    }
+
+	for (const Enemy& enemy : m_enemies)
+    {
+        if (enemy.getPosition() == t_playerPosition)
+        {
+            std::cout << "Enemy has caught player - level update returning true" << "\n";
 			return true;
-		}
+        }
+    }
 
-		std::vector<int> enemyPath = breadthFirstSearch(enemy.getPosition(), t_playerPosition);
-		enemy.update(enemyPath, m_level.m_width);
-		//std::cout << "updating enemy" << "\n";
-	}
+	if (t_playerPosition == m_endPosition)
+    {
+        std::cout << "Player reached end point - level update returning true" << "\n";
+		return true;
+    }
 
 	return false;
 }
@@ -160,6 +169,11 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 {
 	int startCell = asCell(t_startPos);
 	int endCell = asCell(t_endPos);
+
+	if (startCell == -1 || endCell == -1)
+    {
+        return {};
+    }
 
 	if (!isWalkable(m_level.m_tiles[startCell].m_type) || !isWalkable(m_level.m_tiles[endCell].m_type))
 	{
@@ -190,34 +204,14 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 			break;
 		}
 
-		for (int neighboor : m_level.m_tiles.at(current).m_neighboors)
+		for (int neighboor : m_level.m_tiles[current].m_neighboors)
 		{
-			if (visited.at(neighboor) || !isWalkable(m_level.m_tiles.at(neighboor).m_type)) continue;
+			if (visited[neighbour] || !isWalkable(m_level.m_tiles[neighbour].m_type)) continue;
 
-			currentRow = current / m_level.m_width;
-			currentCol = current % m_level.m_width;
-
-			neighboorRow = neighboor / m_level.m_width;
-			neighboorCol = neighboor % m_level.m_width;
-
-			dRow = neighboorRow - currentRow;
-			dCol = neighboorCol - currentCol;
-
-			if (abs(dRow) == 1 && abs(dCol) == 1)
-			{
-				tile1 = currentRow * m_level.m_width + (currentCol + dCol); //horizontal
-				tile2 = (currentRow + dRow) * m_level.m_width + currentCol; //vertical
-
-				if (!isWalkable(m_level.m_tiles.at(tile1).m_type) || !isWalkable(m_level.m_tiles.at(tile2).m_type))
-				{
-					continue;
-				}
-			}
-
-			visited.at(neighboor) = true;
-			parent.at(neighboor) = current;
-
-			queue.push(neighboor);
+            visited[neighbour] = true;
+            parent[neighbour] = current;
+			
+            queue.push(neighbour);
 		}
 	}
 
@@ -237,15 +231,18 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 
 	std::reverse(path.begin(), path.end());
 
-	std::cout << "Path size: " << path.size() << "\n";
-
 	return path;
 }
 
 int Level::asCell(sf::Vector2f t_pos) const
 {
-	int x = std::clamp(static_cast<int>(t_pos.x), 0, m_level.m_width - 1);
-	int y = std::clamp(static_cast<int>(t_pos.y), 0, m_level.m_height - 1);
+	if (std::floor(t_pos.x) != t_pos.x || std::floor(t_pos.y) != t_pos.y || t_pos.x < 0 || t_pos.x >= m_level.m_width || t_pos.y < 0 || t_pos.y >= m_level.m_height)
+    {
+        return -1;
+    }
+
+	int x = static_cast<int>(t_pos.x);
+    int y = static_cast<int>(t_pos.y);
 
 	return y * m_level.m_width + x;
 }

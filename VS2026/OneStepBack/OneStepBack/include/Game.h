@@ -26,6 +26,7 @@ public:
 
 private:
 	void update(sf::Time t_deltaTime);
+	void playTurn(int t_direction);
 
 	bool processEvents();
 	bool processKeys(const std::optional<sf::Event> t_event);

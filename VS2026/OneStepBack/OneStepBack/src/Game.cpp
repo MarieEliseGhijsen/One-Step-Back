@@ -53,26 +53,33 @@ bool Game::processKeys(const std::optional<sf::Event> t_event)
 {
 	const sf::Event::KeyPressed* keypress = t_event->getIf<sf::Event::KeyPressed>();
 
-	if (keypress->code == sf::Keyboard::Key::Up && m_level.isWalkable(m_player.getPosition() + sf::Vector2f{0.0f, -1.0f}))
-	{
-		m_player.update(Globals::UP);
-		return true;
-	}
-	else if (keypress->code == sf::Keyboard::Key::Down && m_level.isWalkable(m_player.getPosition() + sf::Vector2f{ 0.0f, 1.0f }))
-	{
-		m_player.update(Globals::DOWN);
-		return true;
-	}
-	else if (keypress->code == sf::Keyboard::Key::Left && m_level.isWalkable(m_player.getPosition() + sf::Vector2f{ -1.0f, 0.0f }))
-	{
-		m_player.update(Globals::LEFT);
-		return true;
-	}
-	else if (keypress->code == sf::Keyboard::Key::Right && m_level.isWalkable(m_player.getPosition() + sf::Vector2f{ 1.0f, 0.0f }))
-	{
-		m_player.update(Globals::RIGHT);
-		return true;
-	}
+    if (keypress == nullptr)
+    {
+        return false;
+    }
+
+    sf::Vector2f playerPosition = m_player.getPosition();
+
+	if (keypress->code == sf::Keyboard::Key::Up && m_level.isWalkable(playerPosition + sf::Vector2f{ 0.0f, -1.0f }))
+    {
+        playTurn(Globals::UP);
+        return true;
+    }
+    else if (keypress->code == sf::Keyboard::Key::Down && m_level.isWalkable(playerPosition + sf::Vector2f{ 0.0f, 1.0f }))
+    {
+        playTurn(Globals::DOWN);
+        return true;
+    }
+    else if (keypress->code == sf::Keyboard::Key::Left && m_level.isWalkable(playerPosition + sf::Vector2f{ -1.0f, 0.0f }))
+    {
+        playTurn(Globals::LEFT);
+        return true;
+    }
+    else if (keypress->code == sf::Keyboard::Key::Right && m_level.isWalkable(playerPosition + sf::Vector2f{ 1.0f, 0.0f }))
+    {
+        playTurn(Globals::RIGHT);
+        return true;
+    }
 
 	return false;
 }
@@ -92,16 +99,15 @@ void Game::update(sf::Time t_deltaTime)
 		m_window.close();
 	}
 
-	while (true)
-	{
-		if (processEvents()) break;
-	}
+    m_window.renderGameRunning(m_player, m_level);
+}
 
-	if (m_level.update(m_player.getPosition()))
-	{
-		//std::cout << "Player reached end point - closing game" << "\n";
-		m_DELETEexitGame = true;
-	}
+void Game::playTurn(int t_direction)
+{
+    m_player.update(t_direction);
 
-	m_window.renderGameRunning(m_player, m_level);
+    if (m_level.update(m_player.getPosition()))
+    {
+        m_DELETEexitGame = true;
+    }
 }

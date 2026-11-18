@@ -16,6 +16,4 @@ public:
 
 private:
 	sf::Vector2f m_position;
-	std::vector<int> m_path;
-	int m_currentPathIndex = 0;
 };

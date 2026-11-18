@@ -7,6 +7,8 @@ void Player::setPosition(sf::Vector2f t_startPosition)
 
 void Player::update(int t_direction)
 {
+	m_previousPositions.push(m_position);
+
 	switch (t_direction)
 	{
 	case Globals::UP:
@@ -24,6 +26,18 @@ void Player::update(int t_direction)
 	}
 
 	std::cout << "player position : " << m_position.x << ", " << m_position.y << "\n";
+}
+
+void Player::rewind()
+{
+    if (!m_previousPositions.empty())
+    {
+		for(int i = 0; i < 3; i++)
+		{
+			m_position = m_previousPositions.top();
+        	m_previousPositions.pop();
+		}
+    }
 }
 
 sf::Vector2f Player::getPosition() const
