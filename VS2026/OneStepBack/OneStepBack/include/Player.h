@@ -13,7 +13,7 @@ public:
 	void setPosition(sf::Vector2f t_startPosition);
 
 	void update(int t_direction);
-	void rewind();
+	bool rewind();
 
 	sf::Vector2f getPosition() const;
 

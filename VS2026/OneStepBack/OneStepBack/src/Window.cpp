@@ -10,6 +10,21 @@ std::optional<sf::Event> Window::pollEvent()
 	return m_window.pollEvent();
 }
 
+void Window::renderMenu()
+{
+	m_window.clear();
+
+	m_window.display();
+}
+
+void Window::renderInstructions()
+{
+}
+
+void Window::renderSettings()
+{
+}
+
 void Window::renderGameRunning(const Player& t_player, const Level& t_level)
 {
 	m_window.clear();
@@ -93,6 +108,14 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 
 		m_window.draw(enemyShape);
 	}
+}
+
+void Window::renderWin()
+{
+}
+
+void Window::renderLose()
+{
 }
 
 bool Window::isOpen() const

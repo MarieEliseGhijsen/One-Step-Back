@@ -188,11 +188,7 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 	visited.at(startCell) = true;
 	queue.push(startCell);
 
-	int current, currentRow, currentCol;
-	int neighboorRow, neighboorCol;
-	int dRow, dCol;
-
-	int tile1, tile2;
+	int current;
 
 	while (!queue.empty())
 	{
@@ -206,12 +202,12 @@ std::vector<int> Level::breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f
 
 		for (int neighboor : m_level.m_tiles[current].m_neighboors)
 		{
-			if (visited[neighbour] || !isWalkable(m_level.m_tiles[neighbour].m_type)) continue;
+			if (visited[neighboor] || !isWalkable(m_level.m_tiles[neighboor].m_type)) continue;
 
-            visited[neighbour] = true;
-            parent[neighbour] = current;
+            visited[neighboor] = true;
+            parent[neighboor] = current;
 			
-            queue.push(neighbour);
+            queue.push(neighboor);
 		}
 	}
 

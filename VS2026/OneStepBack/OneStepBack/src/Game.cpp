@@ -3,6 +3,7 @@
 
 Game::Game() : m_window{}, m_DELETEexitGame{ false } //when true game will exit
 {
+	m_gameState = States::GAME_RUNNING;
 	m_level.loadLevel(1);
 	m_player.setPosition(m_level.getStartPosition());
 }
@@ -80,6 +81,18 @@ bool Game::processKeys(const std::optional<sf::Event> t_event)
         playTurn(Globals::RIGHT);
         return true;
     }
+	else if (keypress->code == sf::Keyboard::Key::R)
+	{
+		if (m_player.rewind())
+		{
+			m_level.update(m_player.getPosition());
+			return true;
+		}
+		else
+		{
+			processEvents();
+		}
+	}
 
 	return false;
 }
@@ -99,7 +112,35 @@ void Game::update(sf::Time t_deltaTime)
 		m_window.close();
 	}
 
-    m_window.renderGameRunning(m_player, m_level);
+	switch (m_gameState)
+	{
+	case States::GAME_MENU:
+		m_window.renderMenu();
+		break;
+
+	case States::GAME_INSTRUCTIONS:
+		m_window.renderInstructions();
+		break;
+
+	case States::GAME_SETTINGS:
+		m_window.renderSettings();
+		break;
+
+	case States::GAME_RUNNING:
+		m_window.renderGameRunning(m_player, m_level);
+		break;
+
+	case States::GAME_PAUSE:
+		break;
+
+	case States::GAME_WIN:
+		m_window.renderWin();
+		break;
+
+	case States::GAME_LOSE:
+		m_window.renderLose();
+		break;
+	}
 }
 
 void Game::playTurn(int t_direction)

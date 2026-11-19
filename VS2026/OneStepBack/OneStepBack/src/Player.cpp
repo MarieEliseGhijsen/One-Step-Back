@@ -28,8 +28,10 @@ void Player::update(int t_direction)
 	std::cout << "player position : " << m_position.x << ", " << m_position.y << "\n";
 }
 
-void Player::rewind()
+bool Player::rewind()
 {
+	if (m_previousPositions.size() < 3) return false;
+
     if (!m_previousPositions.empty())
     {
 		for(int i = 0; i < 3; i++)
@@ -38,6 +40,8 @@ void Player::rewind()
         	m_previousPositions.pop();
 		}
     }
+
+	return true;
 }
 
 sf::Vector2f Player::getPosition() const
