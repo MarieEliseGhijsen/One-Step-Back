@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <map>
 
 #include "Globals.h"
 
@@ -15,6 +16,7 @@ enum class MenuButton
     PLAY,
     LEVEL_SELECT,
     INSTRUCTIONS,
+	LEADER_BOARD,
     QUIT,
 
     LEVEL_1,
@@ -41,7 +43,8 @@ public:
 	//menu screens
 	void renderMenu();
 	void renderInstructions();
-	void renderLevelSelect(int t_currentLevel);
+	void renderLevelSelect();
+	void renderLeaderboard(const std::vector<int>& t_scores);
 
 	//gameplay
 	void renderGameRunning(const Player& t_player, const Level& t_level);

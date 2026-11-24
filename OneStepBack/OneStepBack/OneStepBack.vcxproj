@@ -37,6 +37,9 @@
   <ItemGroup>
     <Text Include="Resources\LevelData\level1.txt" />
     <Text Include="Resources\LevelData\level2.txt" />
+    <Text Include="Resources\LevelData\level3.txt" />
+    <Text Include="Resources\LevelData\level4.txt" />
+    <Text Include="Resources\LevelData\level5.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

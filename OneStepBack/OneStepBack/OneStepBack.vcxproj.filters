@@ -73,5 +73,14 @@
     <Text Include="Resources\LevelData\level2.txt">
       <Filter>Resource Files\LevelData</Filter>
     </Text>
+    <Text Include="Resources\LevelData\level3.txt">
+      <Filter>Resource Files\LevelData</Filter>
+    </Text>
+    <Text Include="Resources\LevelData\level4.txt">
+      <Filter>Resource Files\LevelData</Filter>
+    </Text>
+    <Text Include="Resources\LevelData\level5.txt">
+      <Filter>Resource Files\LevelData</Filter>
+    </Text>
   </ItemGroup>
 </Project>

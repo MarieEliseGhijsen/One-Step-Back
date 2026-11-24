@@ -9,6 +9,9 @@
 
 void Level::loadLevel(int t_levelNr)
 {
+	m_currentLevelNumber = t_levelNr;
+	m_levelCompleted = false;
+
 	std::string filename = "Resources/LevelData/level" + std::to_string(t_levelNr) + ".txt";
 	std::ifstream file(filename);
 
@@ -43,6 +46,8 @@ void Level::loadLevel(int t_levelNr)
 	}
 
 	int tileType;
+	std::vector<sf::Vector2f> enemyStartPositions;
+	int coins = 0;
 
 	for (int i = 0; i < newLevel.m_width * newLevel.m_height; i++)
 	{
@@ -53,9 +58,28 @@ void Level::loadLevel(int t_levelNr)
 			throw std::runtime_error("Incorrect amount of tile data in : " + filename);
 		}
 
+		if (tileType == 7)
+		{
+			int x = i % newLevel.m_width;
+			int y = i / newLevel.m_width;
+
+			enemyStartPositions.push_back(sf::Vector2f( static_cast<float>(x), static_cast<float>(y)));
+			tileType = 0;
+		}
+
+		if (tileType == 6)
+		{
+			coins++;
+		}
+
 		tileData tile;
 		tile.m_type = tileType;
 		newLevel.m_tiles.push_back(tile);
+	}
+
+	if (coins != 3)
+	{
+		throw std::runtime_error( "Incorrect amount of coin data in : " + filename);
 	}
 
 	file.close();
@@ -94,14 +118,25 @@ void Level::loadLevel(int t_levelNr)
 		loadTileNeighboors(i, i / m_level.m_width, i % m_level.m_width);
 	}
 
+	m_enemies.clear();
+	for (sf::Vector2f position : enemyStartPositions)
+	{
+		m_enemies.emplace_back(position);
+	}
+
+	m_levelScore = 0;
+	m_collectedCoins = 0;
+
+	m_levelStartTime = std::chrono::steady_clock::now();
+	m_timeBonus = 0;
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//testing
-	m_enemies.clear();
-	m_enemies.emplace_back(m_endPosition);
+	//m_enemies.clear();
+	//m_enemies.emplace_back(m_endPosition);
+	// //std::cout << "Enemy tile: " << getTileType(m_startPosition.x, m_startPosition.y) << "\n";
+	//std::cout << "Player tile: " << getTileType(m_endPosition.x, m_endPosition.y) << "\n";
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	std::cout << "Enemy tile: " << getTileType(m_startPosition.x, m_startPosition.y) << "\n";
-	std::cout << "Player tile: " << getTileType(m_endPosition.x, m_endPosition.y) << "\n";
 }
 
 void Level::loadTileNeighboors(int t_index, int t_row, int t_col)
@@ -133,34 +168,77 @@ void Level::loadTileNeighboors(int t_index, int t_row, int t_col)
 
 bool Level::update(sf::Vector2f t_playerPosition)
 {
-	std::vector<std::vector<int>> enemyPaths;
-    enemyPaths.reserve(m_enemies.size());
-
-	for (const Enemy& enemy : m_enemies)
-    {
-        std::vector<int> path = breadthFirstSearch(enemy.getPosition(), t_playerPosition);
-        enemyPaths.push_back(path);
-    }
-
 	for (int i = 0; i < m_enemies.size(); i++)
-    {
-        m_enemies[i].update(enemyPaths[i], m_level.m_width);
-    }
+	{
+		std::vector<int> path = breadthFirstSearch(m_enemies[i].getPosition(), t_playerPosition);
+
+		if (path.size() <= 1)
+		{
+			continue;
+		}
+
+		int nextCell = path[1];
+
+		int nextX = nextCell % m_level.m_width;
+		int nextY = nextCell / m_level.m_width;
+
+		sf::Vector2f nextPosition(static_cast<float>(nextX), static_cast<float>(nextY));
+
+		bool tileOccupied = false;
+
+		for (int j = 0; j < m_enemies.size(); j++)
+		{
+			if (i == j)
+			{
+				continue;
+			}
+
+			if (m_enemies[j].getPosition() == nextPosition)
+			{
+				tileOccupied = true;
+				break;
+			}
+		}
+
+		if (!tileOccupied)
+		{
+			m_enemies[i].update(path, m_level.m_width);
+		}
+	}
 
 	for (const Enemy& enemy : m_enemies)
-    {
-        if (enemy.getPosition() == t_playerPosition)
-        {
-            std::cout << "Enemy has caught player - level update returning true" << "\n";
+	{
+		if (enemy.getPosition() == t_playerPosition)
+		{
+			//std::cout << "Enemy has caught player - level update returning true" << "\n";
 			return true;
-        }
-    }
+		}
+	}
 
 	if (t_playerPosition == m_endPosition)
-    {
-        std::cout << "Player reached end point - level update returning true" << "\n";
+	{
+		//std::cout << "Player reached end point - level update returning true" << "\n";
+
+		if (!m_levelCompleted)
+		{
+			auto endTime = std::chrono::steady_clock::now();
+			int elapsedSeconds = static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(endTime - m_levelStartTime).count());
+
+			m_levelScore += 100;
+			m_timeBonus = std::max(0, 300 - (elapsedSeconds * 5)); //Time Bonus = max(0, 300 - 5t)
+			m_levelScore += m_timeBonus;
+
+			if (m_collectedCoins == 3)
+			{
+				m_levelScore += 200;
+			}
+
+			m_levelScores[m_currentLevelNumber] = m_levelScore;
+			m_levelCompleted = true;
+		}
+
 		return true;
-    }
+	}
 
 	return false;
 }
@@ -243,14 +321,56 @@ int Level::asCell(sf::Vector2f t_pos) const
 	return y * m_level.m_width + x;
 }
 
-void Level::checkCollision()
-{
-}
-
 bool Level::isWalkable(sf::Vector2f t_pos) const
 {
 	int tileType = getTileType(t_pos.x, t_pos.y);
 	return tileType != 1 && tileType != 4;
+}
+
+void Level::handlePlayerEntry(sf::Vector2f t_previousPosition, sf::Vector2f t_newPosition)
+{
+	if (t_previousPosition == t_newPosition)
+	{
+		return;
+	}
+
+	int newCell = asCell(t_newPosition);
+
+	if (newCell == -1)
+	{
+		return;
+	}
+
+	int tileType = m_level.m_tiles[newCell].m_type;
+
+	if (tileType == 6)
+	{
+		m_collectedCoins++;
+		m_levelScore += 50;
+
+		m_level.m_tiles[newCell].m_type = 0;
+
+		std::cout << "Special coin collected! +50 points" << "\n";
+		std::cout << "Coins: " << m_collectedCoins << " / " << m_TOTAL_COINS << "\n";
+		return;
+	}
+
+	if (tileType != 5)
+	{
+		return;
+	}
+
+	for (tileData& tile : m_level.m_tiles)
+	{
+		if (tile.m_type == 3)
+		{
+			tile.m_type = 4;
+		}
+		else if (tile.m_type == 4)
+		{
+			tile.m_type = 3;
+		}
+	}
 }
 
 bool Level::isWalkable(int t_type) const
@@ -282,4 +402,36 @@ sf::Vector2f Level::getStartPosition() const
 const std::vector<Enemy>& Level::getEnemies() const
 {
 	return m_enemies;
+}
+
+int Level::getLevelScore() const
+{
+	return m_levelScore;
+}
+
+int Level::getCollectedCoins() const
+{
+	return m_collectedCoins;
+}
+
+int Level::getTimeBonus() const
+{
+	return m_timeBonus;
+}
+
+const std::map<int, int>& Level::getLevelScores() const
+{
+	return m_levelScores;
+}
+
+int Level::getTotalScore() const
+{
+	int total = 0;
+
+	for (const auto& score : m_levelScores)
+	{
+		total += score.second;
+	}
+
+	return total;
 }

@@ -4,11 +4,11 @@ Window::Window() : m_window(sf::VideoMode({ Globals::SCREEN_WIDTH, Globals::SCRE
 {
 	m_window.setVerticalSyncEnabled(true);
 
-	m_fontLoaded = m_font.openFromFile("Resources/Fonts/Jersey15-Regular.ttf");
+	m_fontLoaded = m_font.openFromFile("Resources/ASSETS/FONTS/Jersey20-Regular.ttf");
 	
 	if (!m_fontLoaded)
     {
-        m_fontLoaded = m_font.openFromFile("Resources/Fonts/arial.ttf");
+        m_fontLoaded = m_font.openFromFile("Resources/ASSETS/FONTS/Jersey20-Regular.ttf");
     }
 
 	if (!m_fontLoaded)
@@ -88,15 +88,16 @@ void Window::renderMenu()
 
 	m_window.clear();
 
-	drawButton(MenuButton::PLAY, "PLAY", 250.0f);
-	drawButton(MenuButton::LEVEL_SELECT, "LEVEL SELECTION", 325.0f);
-	drawButton(MenuButton::INSTRUCTIONS, "INSTRUCTIONS", 400.0f);
-	drawButton(MenuButton::QUIT, "QUIT", 475.0f);
+	drawButton(MenuButton::PLAY, "PLAY", 200.0f);
+	drawButton(MenuButton::LEVEL_SELECT, "LEVEL SELECTION", 275.0f);
+	drawButton(MenuButton::INSTRUCTIONS, "INSTRUCTIONS", 350.0f);
+	drawButton(MenuButton::LEADER_BOARD, "LEADERBOARD", 425.0f);
+	drawButton(MenuButton::QUIT, "QUIT", 500.0f);
 
 	m_window.display();
 }
 
-void Window::renderLevelSelect(int t_currentLevel)
+void Window::renderLevelSelect()
 {
     clearButtons();
 
@@ -109,9 +110,6 @@ void Window::renderLevelSelect(int t_currentLevel)
     drawButton(MenuButton::LEVEL_5, "LEVEL 5", 500.0f);
 
     drawButton(MenuButton::BACK, "BACK", 590.0f);
-
-	drawText("Current level: " + std::to_string(t_currentLevel), 16, { 310.0f, 675.0f }, sf::Color(255, 190, 70));
-
 	m_window.display();
 }
 
@@ -132,9 +130,38 @@ void Window::renderInstructions()
     drawText("LEFT ARROW     - Move left", 18,{ 100.0f, 480.0f });
     drawText("RIGHT ARROW    - Move right",18,{ 100.0f, 515.0f });
     drawText("R              - Rewind previous moves",18, { 100.0f, 550.0f });
-    drawText("ESCAPE         - Pause the game",18, { 100.0f, 585.0f });
+    drawText("P         - Pause the game",18, { 100.0f, 585.0f });
 
     drawButton(MenuButton::BACK, "BACK TO MENU", 670.0f);
+
+	m_window.display();
+}
+
+void Window::renderLeaderboard(const std::vector<int>& t_scores)
+{
+	clearButtons();
+
+	m_window.clear();
+
+	drawText("LEADERBOARD", 40, { 260.0f, 100.0f }, sf::Color(255, 190, 70));
+
+	for (int i = 0; i < 10; i++)
+	{
+		std::string scoreText;
+
+		if (i < t_scores.size())
+		{
+			scoreText = std::to_string(i + 1) + ".    " + std::to_string(t_scores[i]);
+		}
+		else
+		{
+			scoreText = std::to_string(i + 1) + ".    ---";
+		}
+
+		drawText(scoreText, 25, { 300.0f, 180.0f + (i * 40.0f) });
+	}
+
+	drawButton(MenuButton::BACK, "BACK TO MENU", 620.0f);
 
 	m_window.display();
 }
@@ -142,58 +169,55 @@ void Window::renderInstructions()
 //game pause scren
 void Window::renderPause()
 {
-    clearButtons();
-	
+	clearButtons();
+
 	m_window.clear();
 
-    drawText("Take a moment to plan your next move.",17, { 230.0f, 170.0f }, sf::Color(180, 190, 210));
+	drawText("GAME PAUSED", 35, { 285.0f, 170.0f }, sf::Color(255, 190, 70));
+	
+	drawButton(MenuButton::CONTINUE, "CONTINUE", 300.0f);
+	drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 390.0f);
 
-    drawButton(MenuButton::CONTINUE, "CONTINUE", 275.0f);
-    drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 365.0f);
-    drawButton(MenuButton::QUIT, "QUIT", 455.0f);
-
-    m_window.display();
+	m_window.display();
 }
+
 
 //level ened screens
 void Window::renderWin(int t_level)
 {
 	clearButtons();
-	
+
 	m_window.clear();
 
-	drawText("Congratulations! You completed level " + std::to_string(t_level), 20, { 205.0f, 190.0f }, sf::Color(100, 230, 130));
+	drawText("LEVEL COMPLETED!", 35, { 260.0f, 190.0f }, sf::Color(100, 230, 130));
+	drawText("Congratulations! You completed level " + std::to_string(t_level), 20, { 205.0f, 250.0f });
 
-    if (t_level < 5)
-    {
-        drawButton(MenuButton::NEXT_LEVEL, "NEXT LEVEL", 300.0f);
-    }
-    else
-    {
-        drawText("You completed all five levels!", 20, { 245.0f, 300.0f }, sf::Color(255, 190, 70));
-    }
+	if (t_level < 5)
+	{
+		drawButton(MenuButton::NEXT_LEVEL, "NEXT LEVEL", 330.0f);
+	}
+	else
+	{
+		drawText("You completed all five levels!", 20, { 245.0f, 330.0f }, sf::Color(255, 190, 70));
+	}
 
-    drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 400.0f);
-    drawButton(MenuButton::QUIT, "QUIT", 490.0f);
+	drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 420.0f);
 
-    m_window.display();
+	m_window.display();
 }
 
 void Window::renderLose(int t_level)
 {
-	
 	clearButtons();
-	
+
 	m_window.clear();
 
-	drawText("You were caught on level " + std::to_string(t_level),20, { 260.0f, 190.0f }, sf::Color(240, 100, 100));
-    
-	drawButton(MenuButton::TRY_AGAIN, "TRY AGAIN", 300.0f);
-    drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 390.0f);
+	drawText("GAME OVER", 35, { 320.0f, 190.0f }, sf::Color(240, 100, 100)); 
 
-    drawButton(MenuButton::QUIT, "QUIT", 480.0f);
+	drawButton(MenuButton::TRY_AGAIN, "RESTART", 330.0f);
+	drawButton(MenuButton::MAIN_MENU, "MAIN MENU", 420.0f);
 
-    m_window.display();
+	m_window.display();
 }
 
 //game running render functionss
@@ -224,30 +248,38 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 			switch (tileType)
 			{
 			case 0: //empty
-				tile.setFillColor(sf::Color::White);
+				tile.setFillColor(sf::Color(206, 237, 255));
 				break;
 
 			case 1: //wall
-				tile.setFillColor(sf::Color::Black);
+				tile.setFillColor(sf::Color(0, 161, 255));
 				break;
 
 			case 3: //unlocked door
-				tile.setFillColor(sf::Color::Yellow);
+				tile.setFillColor(sf::Color(61, 224, 191));
 				break;
 
 			case 4: //locked door
 				tile.setFillColor(sf::Color(128, 128, 128));
 				break;
 
+			case 5: //key
+				tile.setFillColor(sf::Color::Green);
+				break;
+
+			case 6: //coin
+				tile.setFillColor(sf::Color(255, 216, 70));
+				break;
+
 			case 8: //start
-				tile.setFillColor(sf::Color(255, 165, 0));
+				tile.setFillColor(sf::Color(217, 132, 69));
 				break;
 
 			case 9: //end
-				tile.setFillColor(sf::Color::Blue);
+				tile.setFillColor(sf::Color(217, 69, 93));
 				break;
 
-			default:
+			default: //error
 				tile.setFillColor(sf::Color::Magenta);
 				break;
 			}
@@ -263,7 +295,7 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 
 	sf::RectangleShape player;
 	player.setSize({ tileWidth, tileHeight });
-	player.setFillColor(sf::Color::Cyan);
+	player.setFillColor(sf::Color(129, 61, 224));
 	player.setPosition({ playerPos.x * tileWidth, playerPos.y * tileHeight });
 
 	m_window.draw(player);
@@ -271,7 +303,7 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 	//draw enemies
 	sf::RectangleShape enemyShape;
 	enemyShape.setSize({ tileWidth, tileHeight });
-	enemyShape.setFillColor(sf::Color::Red);
+	enemyShape.setFillColor(sf::Color(51, 102, 65));
 
 	for (const Enemy& enemy : t_level.getEnemies())
 	{
@@ -280,14 +312,6 @@ void Window::renderLevel(const Player& t_player, const Level& t_level)
 
 		m_window.draw(enemyShape);
 	}
-}
-
-void Window::renderWin()
-{
-}
-
-void Window::renderLose()
-{
 }
 
 bool Window::isOpen() const

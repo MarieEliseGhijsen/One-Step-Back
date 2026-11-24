@@ -4,6 +4,9 @@
 
 #include <iostream>
 
+#include <chrono>
+
+#include <map>
 #include <vector>
 #include <queue>
 #include <string>
@@ -43,7 +46,7 @@ public:
     std::vector<int> breadthFirstSearch(sf::Vector2f t_startPos, sf::Vector2f t_endPos);
     int asCell(sf::Vector2f t_pos) const;
 
-    void checkCollision();
+    void handlePlayerEntry(sf::Vector2f t_previousPosition, sf::Vector2f t_newPosition);
     bool isWalkable(sf::Vector2f t_pos) const;
     bool isWalkable(int t_type) const;
     int getTileType(int t_x, int t_y) const;
@@ -55,11 +58,28 @@ public:
 
     const std::vector<Enemy>& getEnemies() const;
 
+    int getLevelScore() const;
+    const std::map<int, int>& getLevelScores() const;
+    int getTotalScore() const;
+    int getCollectedCoins() const;
+    int getTimeBonus() const;
+
 private:
     LevelData m_level;
+    int m_currentLevelNumber = 0;
+    bool m_levelCompleted = false;
 
     sf::Vector2f m_startPosition = sf::Vector2f(-1, -1);
     sf::Vector2f m_endPosition = sf::Vector2f(-1, -1);
 
     std::vector<Enemy> m_enemies;
+
+    int m_levelScore = 0;
+    int m_collectedCoins = 0;
+    const int m_TOTAL_COINS = 3;
+
+    std::chrono::steady_clock::time_point m_levelStartTime;
+    int m_timeBonus = 0;
+
+    std::map<int, int> m_levelScores;
 };

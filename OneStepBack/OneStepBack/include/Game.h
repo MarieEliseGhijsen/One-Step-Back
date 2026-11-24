@@ -6,6 +6,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <algorithm>
 
 #include "Window.h"
 #include "Level.h"
@@ -15,7 +18,8 @@ enum class States
 {
 	GAME_MENU, 
 	GAME_INSTRUCTIONS, 
-	GAME_LEVEL_SELECT, 
+	GAME_LEVEL_SELECT,
+	GAME_LEADER_BOARD,
 	GAME_RUNNING, 
 	GAME_PAUSE, 
 	GAME_WIN, 
@@ -36,15 +40,16 @@ private:
 	bool processKeys(const std::optional<sf::Event> t_event);
 	void processMouseClick(const std::optional<sf::Event> t_event);
 
+	void startLevel(int t_levelNumber);
+	void handleButtonClick(MenuButton t_button);
+
 	void playTurn(int t_direction);
 
-	void startLevel(int t_levelNumber);
-    void restartLevel();
-    void returnToMainMenu();
+	void loadLeaderboard();
+	void saveLeaderboard();
+	void addLeaderboardScore(int t_score);
 
 	void renderCurrentState();
-
-	sf::Font m_jerseyFont;
 
 	Window m_window;
 	Level m_level;
@@ -54,6 +59,8 @@ private:
 
 	int m_currentLevel{ 1 };
     int m_totalLevels{ 5 };
+
+	std::vector<int> m_leaderboardScores;
 
 	bool m_DELETEexitGame; //control exiting game
 };
