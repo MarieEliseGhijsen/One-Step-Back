@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="OneStepBack/OneStepBack.vcxproj" Id="0a784d26-e17e-47fa-8038-311a47136aec" />
+</Solution>
