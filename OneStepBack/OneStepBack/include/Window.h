@@ -61,6 +61,12 @@ public:
 	sf::RenderWindow& getWindow();
 
 private:
+    void loadTextures();
+
+    void drawTile(int t_tileType, sf::Vector2f t_position, sf::Vector2f t_size);
+    void updateAnimations(sf::Time t_deltaTime);
+	void drawAnimatedSprite(sf::Texture& t_texture, sf::Vector2f t_position, sf::Vector2f t_size, int t_frame);
+
 	void drawText( const std::string& t_text, unsigned int t_characterSize, sf::Vector2f t_position, sf::Color t_colour = sf::Color::White);
 
 	void clearButtons();
@@ -72,4 +78,22 @@ private:
     bool m_fontLoaded{ false };
 
 	std::map<MenuButton, sf::FloatRect> m_buttonBounds;
+
+	//textures
+    sf::Texture m_floorTexture;
+    sf::Texture m_wallTexture;
+    sf::Texture m_unlockedDoorTexture;
+    sf::Texture m_lockedDoorTexture;
+    sf::Texture m_keyTexture;
+    sf::Texture m_coinTexture;
+
+	//spritesheet textures
+    sf::Texture m_flagTexture;
+    sf::Texture m_playerTexture;
+    sf::Texture m_enemyTexture;
+
+	//animation varibles
+    int m_currentFrame = 0;
+    float m_animationTimer = 0.0f;
+    float m_frameDuration = 0.15f; //frame speed adjuster
 };

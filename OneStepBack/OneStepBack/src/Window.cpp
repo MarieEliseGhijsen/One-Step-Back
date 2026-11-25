@@ -4,6 +4,8 @@ Window::Window() : m_window(sf::VideoMode({ Globals::SCREEN_WIDTH, Globals::SCRE
 {
 	m_window.setVerticalSyncEnabled(true);
 
+	loadTextures();
+
 	m_fontLoaded = m_font.openFromFile("Resources/ASSETS/FONTS/Jersey20-Regular.ttf");
 	
 	if (!m_fontLoaded)
@@ -32,6 +34,31 @@ void Window::drawText(const std::string& t_text, unsigned int t_characterSize, s
     text.setPosition(t_position);
 
     m_window.draw(text);
+}
+
+void Window::loadTextures()
+{
+    auto load = [](sf::Texture& texture, const std::string& path)
+    {
+        if (!texture.loadFromFile(path))
+        {
+            std::cout << "Could not open : " << path << "\n";
+            return false;
+        }
+
+        texture.setSmooth(false); //stops sprites from blurring
+        return true;
+    };
+
+    load(m_floorTexture, "Resources/ASSETS/IMAGES/FLOOR.png");
+    load(m_wallTexture, "Resources/ASSETS/IMAGES/WALL.png");
+    load(m_unlockedDoorTexture, "Resources/ASSETS/IMAGES/DOOR_UNLOCKED.png");
+    load(m_lockedDoorTexture, "Resources/ASSETS/IMAGES/DOOR_LOCKED.png");
+    load(m_keyTexture, "Resources/ASSETS/IMAGES/KEY.png");
+    load(m_coinTexture, "Resources/ASSETS/IMAGES/COIN.png");
+    load(m_flagTexture, "Resources/ASSETS/IMAGES/FLAG_SPRITESHEET.png");
+    load(m_playerTexture, "Resources/ASSETS/IMAGES/PURP_SPRITESHEET.png");
+    load(m_enemyTexture, "Resources/ASSETS/IMAGES/GOOBER_SPRITESHEET.png");
 }
 
 void Window::drawButton(MenuButton t_button, const std::string& t_text, float t_yPosition)
@@ -233,85 +260,148 @@ void Window::renderGameRunning(const Player& t_player, const Level& t_level)
 void Window::renderLevel(const Player& t_player, const Level& t_level)
 {
 	float tileWidth = static_cast<float>(m_window.getSize().x) / t_level.getWidth();
-	float tileHeight = static_cast<float>(m_window.getSize().y) / t_level.getHeight();
+    float tileHeight = static_cast<float>(m_window.getSize().y) / t_level.getHeight();
 
-	sf::RectangleShape tile;
-	tile.setSize({ tileWidth, tileHeight });
+    sf::Vector2f tileSize(tileWidth, tileHeight);
 
-	for (int col = 0; col < t_level.getHeight(); col++)
-	{
-		for (int row = 0; row < t_level.getWidth(); row++)
-		{
-			int tileType = t_level.getTileType(row, col);
+    for (int y = 0; y < t_level.getHeight(); y++)
+    {
+        for (int x = 0; x < t_level.getWidth(); x++)
+        {
+            int tileType = t_level.getTileType(x, y);
+            sf::Vector2f position(x * tileWidth, y * tileHeight);
 
-			//draw tiles first
-			switch (tileType)
-			{
-			case 0: //empty
-				tile.setFillColor(sf::Color(206, 237, 255));
-				break;
+            drawTile(tileType, position, tileSize);
+        }
+    }
 
-			case 1: //wall
-				tile.setFillColor(sf::Color(0, 161, 255));
-				break;
+    sf::Vector2f playerPos = t_player.getPosition();
+    drawAnimatedSprite(m_playerTexture, { playerPos.x * tileWidth, playerPos.y * tileHeight }, tileSize, m_currentFrame);
 
-			case 3: //unlocked door
-				tile.setFillColor(sf::Color(61, 224, 191));
-				break;
+    for (const Enemy& enemy : t_level.getEnemies())
+    {
+        sf::Vector2f enemyPos = enemy.getPosition();
+        drawAnimatedSprite(m_enemyTexture, { enemyPos.x * tileWidth, enemyPos.y * tileHeight }, tileSize, m_currentFrame);
+    }
+}
 
-			case 4: //locked door
-				tile.setFillColor(sf::Color(128, 128, 128));
-				break;
+void Window::drawTile(int t_tileType, sf::Vector2f t_position, sf::Vector2f t_size)
+{
+    sf::Sprite floorSprite(m_floorTexture);
+    sf::Sprite sprite(m_floorTexture);
+	sf::RectangleShape error(t_size);
 
-			case 5: //key
-				tile.setFillColor(sf::Color::Green);
-				break;
+    sprite.setPosition(t_position);
+    sprite.setScale({t_size.x / 32.0f, t_size.y / 32.0f});
 
-			case 6: //coin
-				tile.setFillColor(sf::Color(255, 216, 70));
-				break;
+    if (m_floorTexture.getSize().x > 0)
+    {
+        floorSprite.setPosition(t_position);
+        floorSprite.setScale({t_size.x / 32.0f, t_size.y / 32.0f});
 
-			case 8: //start
-				tile.setFillColor(sf::Color(217, 132, 69));
-				break;
+        m_window.draw(floorSprite);
+    }
+    else
+    {
+        error.setPosition(t_position);
+        error.setFillColor(sf::Color::Magenta);
 
-			case 9: //end
-				tile.setFillColor(sf::Color(217, 69, 93));
-				break;
+        m_window.draw(error);
+        return;
+    }
 
-			default: //error
-				tile.setFillColor(sf::Color::Magenta);
-				break;
-			}
+    sf::Texture* texture = nullptr;
 
-			tile.setPosition({ row * tileWidth, col * tileHeight });
+    switch (t_tileType)
+    {
+    case 0:
+    case 8:
+        return;
+    case 1:
+        texture = &m_wallTexture;
+        break;
+    case 3:
+        texture = &m_unlockedDoorTexture;
+        break;
+    case 4:
+        texture = &m_lockedDoorTexture;
+        break;
+    case 5:
+        texture = &m_keyTexture;
+        break;
+    case 6:
+        texture = &m_coinTexture;
+        break;
+    case 9:
+        texture = nullptr;
+        break;
+    default:
+    	{
+        	error.setPosition(t_position);
+        	error.setFillColor(sf::Color::Magenta);
 
-			m_window.draw(tile);
-		}
-	}
+        	m_window.draw(error);
+        	return;
+    	}
+    }
 
-	//draw player
-	sf::Vector2f playerPos = t_player.getPosition();
+    if (t_tileType == 9)
+    {
+        drawAnimatedSprite(m_flagTexture, t_position, t_size, m_currentFrame);
+        return;
+    }
 
-	sf::RectangleShape player;
-	player.setSize({ tileWidth, tileHeight });
-	player.setFillColor(sf::Color(129, 61, 224));
-	player.setPosition({ playerPos.x * tileWidth, playerPos.y * tileHeight });
+    if (texture == nullptr || texture->getSize().x == 0)
+    {
+        error.setPosition(t_position);
+        error.setFillColor(sf::Color::Magenta);
 
-	m_window.draw(player);
+        m_window.draw(error);
+        return;
+    }
 
-	//draw enemies
-	sf::RectangleShape enemyShape;
-	enemyShape.setSize({ tileWidth, tileHeight });
-	enemyShape.setFillColor(sf::Color(51, 102, 65));
+    sf::Sprite object(*texture);
+    object.setPosition(t_position);
+    object.setScale({t_size.x / 32.0f, t_size.y / 32.0f});
 
-	for (const Enemy& enemy : t_level.getEnemies())
-	{
-		sf::Vector2f enemyPos = enemy.getPosition();
-		enemyShape.setPosition({ enemyPos.x * tileWidth, enemyPos.y * tileHeight });
+    m_window.draw(object);
+}
 
-		m_window.draw(enemyShape);
-	}
+void Window::updateAnimations(sf::Time t_deltaTime)
+{
+    m_animationTimer += t_deltaTime.asSeconds();
+
+    if (m_animationTimer >= m_frameDuration)
+    {
+        m_animationTimer = 0.0f;
+        m_currentFrame++;
+
+        if (m_currentFrame >= 4)
+        {
+            m_currentFrame = 0;
+        }
+    }
+}
+
+void Window::drawAnimatedSprite(sf::Texture& t_texture, sf::Vector2f t_position, sf::Vector2f t_size, int t_frame)
+{
+        sf::RectangleShape error(t_size);
+
+    if (t_texture.getSize().x < 128 || t_texture.getSize().y < 32)
+    {
+        error.setPosition(t_position);
+        error.setFillColor(sf::Color::Magenta);
+
+        m_window.draw(error);
+        return;
+    }
+
+    sf::Sprite sprite(t_texture);
+    sprite.setTextureRect(sf::IntRect({ t_frame * 32, 0 }, { 32, 32 }));
+    sprite.setPosition(t_position);
+    sprite.setScale({t_size.x / 32.0f, t_size.y / 32.0f});
+
+    m_window.draw(sprite);
 }
 
 bool Window::isOpen() const

@@ -301,6 +301,7 @@ void Game::update(sf::Time t_deltaTime)
 		return;
 	}
 	
+	m_window.updateAnimations(t_deltaTime);
 	renderCurrentState();
 }
 
