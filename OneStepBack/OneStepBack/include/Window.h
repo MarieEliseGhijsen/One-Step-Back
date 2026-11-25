@@ -53,6 +53,8 @@ public:
     void renderWin(int t_level);
     void renderLose(int t_level);
 
+    void updateAnimations(sf::Time t_deltaTime);
+
 	MenuButton getMenuButtonAt(sf::Vector2i t_mousePosition) const;
 
 	bool isOpen() const;
@@ -64,7 +66,6 @@ private:
     void loadTextures();
 
     void drawTile(int t_tileType, sf::Vector2f t_position, sf::Vector2f t_size);
-    void updateAnimations(sf::Time t_deltaTime);
 	void drawAnimatedSprite(sf::Texture& t_texture, sf::Vector2f t_position, sf::Vector2f t_size, int t_frame);
 
 	void drawText( const std::string& t_text, unsigned int t_characterSize, sf::Vector2f t_position, sf::Color t_colour = sf::Color::White);
